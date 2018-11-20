@@ -7,7 +7,7 @@
 (package-initialize)
 
 (require 'icomplete)
-(icomplete-mode 1)
+;;(icomplete-mode 1)
 
 (load "~/.emacs.d/ctags_p4.el")
 (load "~/.emacs.d/yads-mode.el")
@@ -16,8 +16,7 @@
 (load "~/.emacs.d/ibs.el")
 (load "~/.emacs.d/bm-1.37.el")
 (load "~/.emacs.d/gud.el")
-;(load "~/.emacs.d/gud-lldb.el")
-(load "/Users/dan/Source/emacs.d/site-lisp/gud-lldb.el")
+(load "~/.emacs.d/gud-lldb.el")
 
 
 (require 'cc-mode)
@@ -42,6 +41,44 @@
 (require 'package)
 (add-to-list 'package-archives
 '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives
+'("melpa" . "http://melpa.org/packages/") t)
+
+(add-hook 'c++-mode-hook 'irony-mode)
+(add-hook 'c-mode-hook 'irony-mode)
+(add-hook 'objc-mode-hook 'irony-mode)
+
+(global-flycheck-mode)
+
+(package-install 'exec-path-from-shell)
+(exec-path-from-shell-initialize)
+
+(eval-after-load 'flycheck
+  '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+
+;; Use compilation database first, clang_complete as fallback.
+(setq-default irony-cdb-compilation-databases '(irony-cdb-libclang
+                                                irony-cdb-clang-complete))
+
+(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+
+(eval-after-load 'company
+  '(add-to-list 'company-backends '(company-irony-c-headers company-irony)))
+
+(add-hook 'after-init-hook 'global-company-mode)
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(company-preview ((t (:foreground "darkgray" :underline t))))
+ '(company-preview-common ((t (:inherit company-preview))))
+ '(company-tooltip ((t (:background "lightgray" :foreground "black"))))
+ '(company-tooltip-common ((((type x)) (:inherit company-tooltip :weight bold)) (t (:inherit company-tooltip))))
+ '(company-tooltip-common-selection ((((type x)) (:inherit company-tooltip-selection :weight bold)) (t (:inherit company-tooltip-selection))))
+ '(company-tooltip-selection ((t (:background "steelblue" :foreground "white"))))
+ '(magit-blame-heading ((t (:background "gray75" :foreground "black")))))
 
  ; global settings
 (setq-default backup-inhibited 'T)
@@ -196,6 +233,9 @@
 (global-set-key "\C-c;" 'semantic-ia-complete-symbol)
 (global-set-key "\C-c'" 'semantic-complete-analyze-inline)
 
+(global-set-key "\C-ci" 'clang-format-region)
+(global-set-key "\C-cb" 'clang-format-buffer)
+
 ; turn off the stupid toolbar
 (tool-bar-mode -1)
 
@@ -262,17 +302,14 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(c-offsets-alist (quote ((inextern-lang . 0))))
- '(compilation-read-command t)
+ '(compilation-read-command t t)
  '(cua-mode t nil (cua-base))
- '(package-selected-packages (quote (company realgud qml-mode magit)))
+ '(package-selected-packages
+   (quote
+    (company-irony-c-headers company-irony clang-format exec-path-from-shell flycheck-irony flycheck irony company realgud qml-mode magit)))
  '(show-trailing-whitespace nil)
  '(tool-bar-mode nil))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(magit-blame-heading ((t (:background "gray75" :foreground "black")))))
+
 
 ;; load tags for studio
 (defun tags-studio ()
